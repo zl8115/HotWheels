@@ -238,7 +238,9 @@ class obstacleAvoidance(object):
 				self.bot.setMotorSpeeds(0, 0)
 
 			else: # drive while we see a center line
-				bias = self.steerTowards(centerIndex,0.4)				
+				self.visTrack(centerIndex[0]);
+				bias = -self.bot.servoPosition/90
+				#bias = self.steerTowards(centerIndex,0.4)				
 				if self.detectObstacle():
 					dist = self.getDistance(self.biggestObstacle)
 
@@ -256,7 +258,8 @@ class obstacleAvoidance(object):
 			speed = 1
 
 		self.bot.setServoPosition(0)
-
+		biasList = []
+		servoList = []
 		while True:
 			# self.updateBlocks()
 			# self.detectObstacle()
@@ -283,13 +286,16 @@ class obstacleAvoidance(object):
 
 
 			self.updateBlocks()
+			self.detectObstacle()
 
 			targetSpeed = speed
 			bias = 0
+			prevBias = 0
 
 			centerIndex = []
 			leftIndex = []
-			rightIndex = []		
+			rightIndex = []
+			
 
 			for i in range(0, self.newCount): # go through all the blocks from PixyCam to find the center line block
 				if self.newBlocks[i].m_signature == self.centerLineID:
@@ -298,24 +304,53 @@ class obstacleAvoidance(object):
 					leftIndex.append(i)
 				elif self.newBlocks[i].m_signature == self.rightLineID:
 					rightIndex.append(i)
+
 			
-			if not centerIndex: # stop the racer and wait for new blocks
+
+			#print(time.time() - self.frameTimes[-1])
+			
+
+			if (time.time() - self.frameTimes[-1] < 0.4):
+				#targetSpeed = 0
+				###Level 5### Please insert code here to derive non-zero obstacleSteering and keep the robot running
+				### You need to first identify the obstacle ID and decide whether you want to track it. Then you use what you learn from Level 2,3,4 to implement detection and steering.
+				 # Lvl 5
+				bias = self.steerTowards(centerIndex,0.4) 
+				dist = self.getDistance(self.biggestObstacle)
+				if (dist - targetDist < 0.02) and (dist - targetDist > -1) and (abs(self.bot.servoPosition) < targetAngle):
+					self.visTrack(self.biggestObstacle)
+					bias = 0.5*self.bot.servoPosition/90 # Lvl 5
+					servoList.append(self.bot.servoPosition)
+					#print(biasList)
+				elif (time.time() - self.frameTimes[-1] > 0.05) and servoList and not (self.bot.servoPosition == 0):	
+					#bias = -self.bot.servoPosition/90
+					#print(biasList)
+					bias = -0.7*servoList[-1]/90
+					self.bot.setServoPosition(servoList[-1])
+					servoList.pop(-1)
+
+					#if self.bot.servoPosition > 0:
+					#	self.bot.setServoPosition(self.bot.servoPosition - 1)
+					#else:
+					#	self.bot.setServoPosition(self.bot.servoPosition + 1)
+				#elif (time.time() - self.frameTimes[-1] > 0.1):
+				#	self.bot.setServoPosition(0)
+				#	servoList = []
+			#elif (time.time() - self.frameTimes[-1] > 2):             		
+			#	self.bot.servoPosition
+				#else:
+				#	
+
+			elif not centerIndex: # stop the racer and wait for new blocks
 				targetSpeed = 0
 
 			else: # drive while we see a center line
-				bias = self.steerTowards(centerIndex,0.4)            	
-				if self.detectObstacle():
-					#targetSpeed = 0
-					###Level 5### Please insert code here to derive non-zero obstacleSteering and keep the robot running
-					### You need to first identify the obstacle ID and decide whether you want to track it. Then you use what you learn from Level 2,3,4 to implement detection and steering.
-					self.visTrack(centerIndex[0]) # Lvl 5
-					dist = self.getDistance(self.biggestObstacle)
-					if (dist - targetDist < 0.02) and (dist - targetDist > -1) and (abs(self.bot.servoPosition) < targetAngle):
-						bias = steerAway(self.biggestObstacle,0.6) # Lvl 5
-
-				else:             		
-					self.bot.setServoPosition(0)
-
+				bias = self.steerTowards(centerIndex,0.4)  
+				self.bot.setServoPosition(0)
+				servoList = []
+				#biasList = []          	
+				
+			prevBias = bias
 			self.drive(targetSpeed,bias)		
 
 			#steering = obstacleSteering + lineSteering # we set the final steering as a linear combination of the obstacle steering and center line steering - but it's all up to you!
