@@ -166,6 +166,18 @@ class obstacleAvoidance(object):
 
 		return distance
 
+	def getAngle(self, objectIDs):
+		if not objectIDs:
+			return 0
+		else:
+			pixelDistance = self.pixyCenterX - sum([self.newBlocks[x].m_x for x in objectIDs])/len(objectIDs)
+
+			angle = pixelDistance/self.pixyMaxX*self.pixyY_FoV/180.0*math.pi
+
+			#distance = camHeight * math.tan(math.pi/2.0 - camAngle + angle)
+
+			return angle
+
 	# New Addition
 	def steerTowards(self, objectIDIndex, angle):
 		percentageError = 0
@@ -214,15 +226,19 @@ class obstacleAvoidance(object):
 		self.bot.setMotorSpeeds(0, 0) # set racer to stop
 		previousSpeed = 0
 		targetSpeed = 0
+		servoList = []
 		
 		while True:
 			self.updateBlocks()
+			self.detectObstacle()
 			smallestCenterLine = -1
 			smallestObstacle = -1
 			shortcut = -1
 			bias = 0
 			previousSpeed = targetSpeed
 			targetSpeed = speed
+			targetDist = 0.5
+			targetAngle = 50
 
 			centerIndex = []
 			leftIndex = []
@@ -243,10 +259,10 @@ class obstacleAvoidance(object):
 			# centerIndex = [i for i in range(0,len(self.newCount)) if self.newBlocks[i] == self.centerLineID]
 			#centerIndex = []
 
-			if (time.time() - self.shortcutFirstTime < 0.2) and not (self.shortcutFirstTime == 0):
+			if (time.time() - self.shortcutFirstTime < 0.15) and not (self.shortcutFirstTime == 0):
 				#bias = self.steerTowards([shortcut],0.4)
-				bias = -0.4 + self.steerTowards(leftIndex[0:1],0.5)
-				print(['Shorcut: Held', bias])
+				bias = -0.4 #+ self.steerAway(leftIndex[0:1],0.2)
+				print('Shorcut: Held ', bias)
 
 			elif (shortcut > 0):
 				#print('Shortcut',self.shortcutFirstTime)
@@ -254,34 +270,99 @@ class obstacleAvoidance(object):
 					self.shortcutFirstTime = time.time()
 					bias = -0.5
 					print('Shortcut: First Time')
+				else:
+					print('Shortcut: Error')
 
-			elif (time.time() - self.frameTimes[-1] < 0.4):
-				#targetSpeed = 0
-				###Level 5### Please insert code here to derive non-zero obstacleSteering and keep the robot running
-				### You need to first identify the obstacle ID and decide whether you want to track it. Then you use what you learn from Level 2,3,4 to implement detection and steering.
-				 # Lvl 5
-				bias = self.steerTowards(centerIndex,0.4) 
-				dist = self.getDistance(self.biggestObstacle)
-				if (dist - targetDist < 0.02) and (dist - targetDist > -1) and (abs(self.bot.servoPosition) < targetAngle):
-					self.visTrack(self.biggestObstacle)
-					bias = 0.5*self.bot.servoPosition/90 # Lvl 5
-					servoList.append(self.bot.servoPosition)
-					#print(biasList)
-				elif (time.time() - self.frameTimes[-1] > 0.05) and servoList and not (self.bot.servoPosition == 0):	
-					#bias = -self.bot.servoPosition/90
-					#print(biasList)
-					bias = -0.7*servoList[-1]/90
-					self.bot.setServoPosition(servoList[-1])
-					servoList.pop(-1)
-				#print(len(biasList))
+			# elif (time.time() - self.frameTimes[-1] < 0.4):
+			# 	print("Obstacle")
+			# 	#targetSpeed = 0
+			# 	###Level 5### Please insert code here to derive non-zero obstacleSteering and keep the robot running
+			# 	### You need to first identify the obstacle ID and decide whether you want to track it. Then you use what you learn from Level 2,3,4 to implement detection and steering.
+			# 	 # Lvl 5
+			# 	bias = self.steerTowards(centerIndex,0.4) 
+			# 	dist = self.getDistance(self.biggestObstacle)
+			# 	if (dist - targetDist < 0.02) and (dist - targetDist > -1) and (abs(self.bot.servoPosition) < targetAngle):
+			# 		self.visTrack(self.biggestObstacle)
+			# 		bias = 0.7*self.bot.servoPosition/90 # Lvl 5
+			# 		servoList.append(self.bot.servoPosition)
+			# 		#print(biasList)
+			# 	elif (time.time() - self.frameTimes[-1] > 0.05) and servoList and not (self.bot.servoPosition == 0):	
+			# 		#bias = -self.bot.servoPosition/90
+			# 		#print(biasList)
+			# 		bias = -servoList[-1]/90
+			# 		self.bot.setServoPosition(servoList[-1])
+			# 		servoList.pop(-1)
+			# 	#print(len(biasList))
 
 			elif not centerIndex: # stop the racer and wait for new blocks
 				#if previousSpeed > 0:
 				#	targetSpeed = previousSpeed - 0.05
-				lbias = self.steerAway(leftIndex,0.4)
-				rbias = self.steerAway(rightIndex,0.4)
-				bias = lbias + rbias
-				targetSpeed = 0.6*targetSpeed
+
+				# lbias = self.steerAway(leftIndex,0.4)
+				# rbias = self.steerAway(rightIndex,0.4)
+				# if self.biggestObstacle >= 0:
+				# 	ybias = self.steerAway([self.biggestObstacle],0.4)
+				# else:
+				# 	ybias = 0
+				# bias = lbias + rbias + ybias
+				# targetSpeed = 0.6*targetSpeed
+				# print("Not CenterIndex", lbias, rbias, ybias, bias)
+				print("Not CenterIndex")
+				if leftIndex:
+					lAngle = self.getAngle(leftIndex)
+				else:
+					lAngle = 0
+				if rightIndex:
+					rAngle = self.getAngle(rightIndex)
+				else:
+					rAngle = 0
+				if self.biggestObstacle >= 0:
+					yAngle = self.getAngle([self.biggestObstacle])
+				else:
+					yAngle = 0
+
+				if not lAngle == 0 and not rAngle == 0 and not yAngle == 0:
+					lDiff = lAngle - yAngle
+					rDiff = rAngle - yAngle
+					if abs(lDiff) > abs(rDiff):
+						self.visTrackBetween(leftIndex[0:1] + [self.biggestObstacle])
+						bias = -self.bot.servoPosition
+						print("Tracking: Blue and Yellow")
+					elif abs(rDiff) > abs(lDiff):
+						self.visTrackBetween(rightIndex[0:1] + [self.biggestObstacle])
+						bias = -self.bot.servoPosition/90
+						print("Tracking: Green and Yellow")
+
+				elif not rAngle == 0 and not yAngle == 0: #If no rightLane
+					rDiff = rAngle - yAngle
+					if abs(rDiff) > 0.3:
+						self.visTrackBetween(rightIndex[0:1] + [self.biggestObstacle])
+						bias = -self.bot.servoPosition/90
+						print("Tracking: Green and Yellow")
+					else:
+						bias = self.steerAway(rightIndex, 0.4)
+						print("Tracking: Away from Blue")
+
+				elif not lAngle == 0 and not yAngle == 0: #If no leftLane
+					lDiff = lAngle - yAngle
+					if abs(lDiff) > 0.3:
+						self.visTrackBetween(leftIndex[0:1] + [self.biggestObstacle])
+						bias = -self.bot.servoPosition/90
+						print("Tracking: Left and Yellow")
+					else:
+						bias = self.steerAway(leftIndex, 0.4)
+						print("Tracking: Away from Green")
+				else:
+					lbias = self.steerAway(leftIndex,0.4)
+					rbias = self.steerAway(rightIndex,0.4)
+
+					bias = lbias+rbias
+					print("Not CenterIndex: Default")
+				# elif not 
+				# lAngle - yAngle < 0.3: go right
+				# else go left
+				#print(lAngle,yAngle,rAngle)
+				
 
 				#print([self.newBlocks[i].m_signature for i in range(0,self.newCount)])
 				#if self.bot.servoPosition <= 0:
@@ -291,6 +372,7 @@ class obstacleAvoidance(object):
 
 			elif centerIndex: # drive while we see a center line
 				#self.visTrack(centerIndex[0])
+				print("RedLane: Following")
 				self.bot.setServoPosition(0)
 			###Level 1### Please insert code here to compute the center line angular error as derived from the pixel error. 
 			### Come up with a steering command to send to self.drive(speed, steering) function
@@ -391,7 +473,7 @@ class obstacleAvoidance(object):
 					rightIndex.append(i)
 
 			if leftIndex and self.detectObstacle():
-				self.visTrackBetween(centerIndex[0],self.biggestObstacle)
+				self.visTrackBetween([leftIndex[0],self.biggestObstacle])
 				bias = -self.bot.servoPosition/90
 				#print(bias)
 			else:
@@ -687,3 +769,5 @@ class obstacleAvoidance(object):
 				
 			self.drive(targetSpeed,bias)
 
+	def visTrackImplement(self,speed):
+		self.updateBlocks()

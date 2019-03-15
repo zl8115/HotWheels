@@ -7,7 +7,7 @@ def main():
 	racer.setServoPosition(0)	
 	oa = obstacleAvoidance(racer)
 
-	oa.laneFollowing(0.7) #old code
+	oa.laneFollowing(1) #old code
 	#oa.laneFollowing(0.3, 0.3)
 	#oa.stopAtStationaryObstacles(0.3,0.3,30)
 	#oa.avoidStationaryObstacles(0.3,0.3,75)
