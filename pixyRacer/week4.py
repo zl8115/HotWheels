@@ -23,7 +23,7 @@ l90 = [0.2,0.2]
 r90 = [-0.20,-0.20]
 
 pa = 0.5
-pam = [0,0]
+pam = [0, 0]
 
 #deadt = [tst, pa, ttu, pa, tst, pa, ttu, pa, tst, pa, ttu, pa, tst, pa, ttu, pa, tst]
 #deadm = [st, pam, l90, pam, st, pam, l90, pam, st, pam, r90, pam, st, pam, r90, pam, st] 

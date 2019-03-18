@@ -213,7 +213,7 @@ class obstacleAvoidance(object):
 		
 		while True:
 			self.updateBlocks()
-			smallestCenterLine = -1;
+			smallestCenterLine = -1
 			
 			for i in range(0, self.newCount): # go through all the blocks from PixyCam to find the center line block
 				if self.newBlocks[i].m_signature == self.centerLineID:
@@ -229,7 +229,7 @@ class obstacleAvoidance(object):
             ### Here you want to incorporate the servo pan angle to reconstruct the obstacle orienation relative to the robot            
 
 	def avoidStationaryObstacles(self, speed):		
-		if speed < 0: # make sure the speed never goes to unreasonable values
+		if speed < 0:	 # make sure the speed never goes to unreasonable values
 			speed = 0
 		elif speed > 1:
 			speed = 1
@@ -263,9 +263,29 @@ class obstacleAvoidance(object):
 		###Level 5### Please insert code here to derive non-zero obstacleSteering and keep the robot running
 		### You need to first identify the obstacle ID and decide whether you want to track it. Then you use what you learn from Level 2,3,4 to implement detection and steering.
 
-			steering = obstacleSteering + lineSteering # we set the final steering as a linear combination of the obstacle steering and center line steering - but it's all up to you!
+			steering = obstacleSteering + lineSteering	 # we set the final steering as a linear combination of the obstacle steering and center line steering - but it's all up to you!
 			self.drive(targetSpeed, steering) 
 
 	def avoidMovingObstacles(self, speed):
 		###Level 6 Bonus### If you feel comfortable, try to implement a behaviour to avoid a moving obstacle
 		return
+
+	def dodge(self, direction):
+		st = [0.2, -0.21]
+		turn90 = [0.2, 0.2]
+		stop = [0, 0]
+
+		st_t = 0.7
+		turn_t = 0.5
+		stop_t = 0.1
+
+		durations = [turn_t, stop_t, st_t, stop_t,
+					 turn_t, stop_t, st_t, stop_t,
+					 turn_t, stop_t, st_t, stop_t,
+					 turn_t, stop_t, st_t, stop_t, ]
+		speeds = [turn90 * direction, stop, st, stop,
+				  turn90 * direction * -1, stop, st, stop,
+				  turn90 * direction * -1, stop, st, stop,
+				  turn90 * direction, stop, st, stop]
+
+		self.tp.deadReckoningTrack(durations, speeds)

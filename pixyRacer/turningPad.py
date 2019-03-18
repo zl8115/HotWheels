@@ -82,9 +82,9 @@ class turningPad(object):
 
 		for i in range(len(timePoints)):
 			self.bot.setTurnRates(motorCommands[i][0], motorCommands[i][1])
-			#self.bot.setMotorSpeeds(motorCommands[i][0], motorCommands[i][1])
+			# self.bot.setMotorSpeeds(motorCommands[i][0], motorCommands[i][1])
 
-			while ((time.time() - t_start) < sum(timePoints[0:(i+1)])):
+			while (time.time() - t_start) < sum(timePoints[0:(i+1)]):
 				pass
 
 		return
