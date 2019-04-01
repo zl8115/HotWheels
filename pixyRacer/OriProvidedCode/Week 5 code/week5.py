@@ -1,5 +1,3 @@
-# Same as 'race' branch
-
 from pixyRacer import pixyRacer
 from tuningCurve import tuningCurve
 from helper import PID_controller
@@ -11,13 +9,13 @@ def predicate(timePoints, time, errors, angles):
 	return servoPos
 
 def main():
-	servoCorrection = 20 # put the servo correction for your robot here
+	servoCorrection = 0 # put the servo correction for your robot here
 	racer = pixyRacer(servoCorrection)
 	racer.setServoPosition(0)
 	# for the second part of the visual tracking tuning curves, improve this controller
 	# either by tuning the PID gain values, or by writing an entirely new controller!
 	# any controller has to have an 'update' function that takes in an error and returns a control
-	servoController = PID_controller(0.06, 0.00, 0.06)
+	servoController = PID_controller(0.06, 0, 0.06)
 	tc = tuningCurve(racer, servoController)
 
 	# visual tracking tuning curves
@@ -26,7 +24,7 @@ def main():
 
 	# visual predication
 	startPos = 0 # set a starting angle for the servo
-	result, error = tc.visualPredication(predicate, startPos)
+	#result, error = tc.visualPredication(predicate, startPos)
 
 
 main()

@@ -1,5 +1,3 @@
-# Pretty much the same original file
-
 import pixyRacer
 import pixy
 import time

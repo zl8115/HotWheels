@@ -14,16 +14,16 @@ cor = [0,-0.02]
 #deadm = [[-0.25,-0.195]]
 #deadm =  [[0.2,0.21]]
 
-tst = 1.1
-ttu = 0.52
+# Testing Variables and Tunings
+tst = 1.1 # Time straight - Not Used
+ttu = 0.52 # Time Turn - Not Used
 
+st = [0.2,-0.21] # straight motor settings
+l90 = [0.2,0.2] # left turn motor settings
+r90 = [-0.20,-0.20] # right turn motor settings
 
-st = [0.2,-0.21]
-l90 = [0.2,0.2]
-r90 = [-0.20,-0.20]
-
-pa = 0.5
-pam = [0, 0]
+pa = 0.5 # pause duration
+pam = [0, 0] # pause motor speed
 
 #deadt = [tst, pa, ttu, pa, tst, pa, ttu, pa, tst, pa, ttu, pa, tst, pa, ttu, pa, tst]
 #deadm = [st, pam, l90, pam, st, pam, l90, pam, st, pam, r90, pam, st, pam, r90, pam, st] 

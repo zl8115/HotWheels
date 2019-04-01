@@ -1,5 +1,3 @@
-# Modified by HotWheels Team: Inverted Wheel settings due to robot setup
-
 import pixyRacer
 import time
 import math
@@ -57,7 +55,7 @@ class turningPad(object):
 	# runTime 		- (optional) amount of time ([s]) to run motors for
 	#				-  if not set, motors will run until the next command is issued
 	def symmetricTurn(self, turningRate, runTime=None):
-		self.bot.setTurnRates(turningRate, turningRate, runTime) # made turningRates the same due to robot settings
+		self.bot.setTurnRates(turningRate, -turningRate, runTime)
 		return
 
 	# speed 	- speed ([ms^(-1)]) to set the robot to
@@ -67,9 +65,9 @@ class turningPad(object):
 	# test this and add stuff to the code to correct the turn rates
 	def straightLine(self, speed, correction=[0, 0], runTime=None):
 		lSpeed = (1.0+correction[0])*speed
-		rSpeed = -(1.0+correction[1])*speed # inverted rWheel due to robot settings
+		rSpeed = (1.0+correction[1])*speed
 		
-		self.bot.setTurnRates(lSpeed, rSpeed, runTime)
+		self.bot.setTurnRates(speed, speed, runTime)
 
 
 	def deadReckoningTrack(self, timePoints, motorCommands):
@@ -83,10 +81,10 @@ class turningPad(object):
 		t_start = time.time()
 
 		for i in range(len(timePoints)):
-			self.bot.setTurnRates(motorCommands[i][0], motorCommands[i][1])
-			# self.bot.setMotorSpeeds(motorCommands[i][0], motorCommands[i][1])
 
-			while (time.time() - t_start) < sum(timePoints[0:(i+1)]):
+			self.bot.setTurnRates(motorCommands[i][0], motorCommands[i][1])
+
+			while ((time.time() - t_start) < sum(timePoints[0:(i+1)])):
 				pass
 
 		return

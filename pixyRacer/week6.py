@@ -1,3 +1,5 @@
+# Modified to match the updated obstacleAvoidance_Ze.py file
+
 from pixyRacer import pixyRacer
 from obstacleAvoidance_Ze import obstacleAvoidance
 
@@ -7,7 +9,7 @@ def main():
 	racer.setServoPosition(0)	
 	oa = obstacleAvoidance(racer)
 
-	oa.laneFollowing(1) #old code
+	#oa.laneFollowing(1) #old code
 	#oa.laneFollowing(0.3, 0.3)
 	#oa.stopAtStationaryObstacles(0.3,0.3,30)
 	#oa.avoidStationaryObstacles(0.3,0.3,75)
@@ -16,6 +18,7 @@ def main():
 	#oa.idle(0.5)
 	#oa.followVisTrack(0.3)
 	#oa.newRace(0.7)
+	oa.finalRace(1)
 
 	
 main()
