@@ -3,9 +3,13 @@ clear all;
 % Default Settings Simulation
 [sim_vars,bot,target] = init_vars();
 
+% Generating 3 bots for different pursuits
+% Simple Pursuit
 bot1 = bot;
+% Constant Bearing Pursuit
 bot2 = bot;
 bot2.const_bearing = 20;
+% Parallel Navigation Pursuit
 bot3 = bot;
 bot3.PID = [0;0;5];
 

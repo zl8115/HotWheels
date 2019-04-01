@@ -208,15 +208,20 @@ legend('Bot(Pursuer)','Target');
 %}
 
 %{
-function positions = gen_trajectories(t,speed,option)
-    t_step = mean(diff(t));
+function positions = gen_trajectories(sim_vars,speed,option)
+    % Recreate the time axis
+    t_end = sim_vars.t_end;
+    t_step = sim_vars.t_step;
+    t = [0:t_step:t_end]; 
+    
+    % Generate different options
     if option == 2 % Sine Wave Trajectory (0.2Hz)
         x = [0:1:length(t)-1]*(speed*t_step) + 0.15;
-        y = -sin(2*pi*0.2*t); % Sine Wave
+        y = -0.3*sin(2*pi*0.2*t); % Sine Wave
     elseif option == 3 % Constant Speed Sine Wave Trajectory
         x = filter(1,[1 -1], abs((speed*t_step)*cos(2*pi*0.2*t))) + 0.15;
         y = filter(1,[1 -1], -(speed*t_step)*sin(2*pi*0.2*t));
-    else
+    else % Linear Trajectory
         x = [0:1:length(t)-1]*(speed*t_step) + 0.15;
         y = zeros(1,length(t));
     end
@@ -228,7 +233,7 @@ function [sim_results,bot,target] = simulate(sim_vars,bot,target)
     t_end = sim_vars.t_end;
     t_step = sim_vars.t_step;
     t = [0:t_step:t_end];    
-    target.pos = gen_trajectories(t,target.speed,target.traj_option);
+    target.pos = gen_trajectories(sim_vars,target.speed,target.traj_option);
 
     for i = 1:length(t)
         target_pos_now = target.pos(:,i);
@@ -257,17 +262,6 @@ function [sim_results,bot,target] = simulate(sim_vars,bot,target)
             theta_e = -sign(theta_e)*(360 - abs(theta_e));        
         end
 
-        % Relative Distance of Target from Bot
-        dist(i) = norm(target_bot_diff);
-
-        % Break Condition if Target is in Close Proximity to the Bot (Pursuer)
-        if dist(i) < 5e-3
-            %fprintf('Target Caught! \n');
-            %fprintf('Time: %1.2f seconds \n',t(i));
-            %fprintf('Bot Speed: %1.2f m/s \nTarget Speed: %1.2f m/s \n', bot.speed, target.speed);
-            break
-        end
-
         % PID Controller State Update    
         P = bot.PID(1)*(theta_e - bot.const_bearing); % Simple Pursuit if const_bearing = 0; else Constant Bearing    
         I = 0; % Not needed, not coded...  
@@ -282,12 +276,25 @@ function [sim_results,bot,target] = simulate(sim_vars,bot,target)
         x_vel = bot.speed*cosd(theta_h + theta_hdot*t_step);
         y_vel = bot.speed*sind(theta_h + theta_hdot*t_step);
         vel = [x_vel;y_vel];
+        
+        bot.theta(:,i) = [theta_h; theta_hdot; theta_r; theta_e];
+        
+        % Relative Distance of Target from Bot
+        dist(i) = norm(target_bot_diff);
+
+        % Break Condition if Target is in Close Proximity to the Bot (Pursuer)
+        if dist(i) < 5e-3
+            %fprintf('Target Caught! \n');
+            %fprintf('Time: %1.2f seconds \n',t(i));
+            %fprintf('Bot Speed: %1.2f m/s \nTarget Speed: %1.2f m/s \n', bot.speed, target.speed);
+            break
+        end
 
         % Next State Updates
         if i < length(t)
             bot.pos(:,i+1) = bot.pos(:,i) + t_step*vel; % + 0.0001*randn(2,1);
         end
-        bot.theta(:,i) = [theta_h; theta_hdot; theta_r; theta_e];
+        
     end
     
     sim_results.time = t(i);
@@ -296,27 +303,35 @@ function [sim_results,bot,target] = simulate(sim_vars,bot,target)
     sim_results.t_step = t_step;
     
     target.pos = target.pos(:,1:size(bot.pos,2));
-    %sim_results.y_bounds = [min([bot.pos(2,:);target.pos(2,:)]) max([bot.pos(2,:);target.pos(2,:)])];
-    %sim_results.x_bounds = [min([bot.pos(1,:);target.pos(1,:)]) max([bot.pos(1,:);target.pos(1,:)])];
+    y_est_bounds = [min([bot.pos(2,:);target.pos(2,:)],[],'all') max([bot.pos(2,:);target.pos(2,:)],[],'all')];
+    x_est_bounds = [min([bot.pos(1,:);target.pos(1,:)],[],'all') max([bot.pos(1,:);target.pos(1,:)],[],'all')];
+    sim_results.y_bounds = [min([y_est_bounds;sim_vars.y_bounds],[],'all') max([y_est_bounds;sim_vars.y_bounds],[],'all')];
+    sim_results.x_bounds = [min([x_est_bounds;sim_vars.x_bounds],[],'all') max([x_est_bounds;sim_vars.x_bounds],[],'all')];
 end
 
 function [] = print_results(sim_results,bot,target)
+    % Recreate time axis
     t = [0:sim_results.t_step:sim_results.time];
 
     figure;
+    
+    % Plot Trajectory of Target and Bot
     subplot(2,3,[1,2,4,5]);hold on;
     plot(bot.pos(1,end),bot.pos(2,end),'b','marker','o');
     plot(target.pos(1,end),target.pos(1,end),'r','marker','x');
     plot(bot.pos(1,:),bot.pos(2,:),'b');
     plot(target.pos(1,:),target.pos(2,:),'r');
     grid on;
-    ylim([min([bot.pos(2,:);target.pos(2,:)],[],'all') max([bot.pos(2,:);target.pos(2,:)],[],'all')]);
-    xlim([min([bot.pos(1,:);target.pos(1,:)],[],'all') max([bot.pos(1,:);target.pos(1,:)],[],'all')]);
+    %ylim([min([bot.pos(2,:);target.pos(2,:)],[],'all') max([bot.pos(2,:);target.pos(2,:)],[],'all')]);
+    %xlim([min([bot.pos(1,:);target.pos(1,:)],[],'all') max([bot.pos(1,:);target.pos(1,:)],[],'all')]);
+    ylim(sim_results.y_bounds)
+    xlim(sim_results.x_bounds)
     title('Trajectory Plot of Target and Bot')
     ylabel('Y-Coordinate');
     xlabel('X-Coordinate');
     legend('Bot(Pursuer)','Target');
 
+    % Plot Distance of Target and Bot over Time
     subplot(2,3,3)
     plot(t,sim_results.dist);
     grid on;
@@ -326,6 +341,7 @@ function [] = print_results(sim_results,bot,target)
     ylabel('Distance')
     xlabel('Time(s)')
 
+    % Plot Relative Error Angle of Target and Bot over Time
     subplot(2,3,6)
     plot(t,bot.theta(4,:));
     grid on;

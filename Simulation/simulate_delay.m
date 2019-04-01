@@ -1,10 +1,14 @@
 function [sim_results,bot,target] = simulate_delay(sim_vars,bot,target,delay)
+    % Define the time scale
     t_end = sim_vars.t_end;
     t_step = sim_vars.t_step;
-    t = [0:t_step:t_end];    
+    t = [0:t_step:t_end];
+    
+    % Generate the target positions for the whole duration
     target.pos = gen_trajectories(sim_vars,target.speed,target.traj_option);
 
     for i = 1:length(t)
+        % Getting Current Time Data
         target_pos_now = target.pos(:,i);
         bot_pos_now = bot.pos(:,i);
         target_bot_diff = target_pos_now - bot_pos_now;
@@ -39,7 +43,6 @@ function [sim_results,bot,target] = simulate_delay(sim_vars,bot,target,delay)
         else
             P = bot.PID(1)*(bot.theta(4,i-delay) - bot.const_bearing);
         end
-            
         I = 0; % Not needed, not coded...  
         if i - delay <= 2
             D = 0;        
@@ -48,13 +51,11 @@ function [sim_results,bot,target] = simulate_delay(sim_vars,bot,target,delay)
         else
             D = bot.PID(3)*(bot.theta(3,i-delay) - bot.theta(3,i-delay-1))/t_step; % Parallel Navigation
         end
+        
+        % Theta_hdot calculation
         theta_hdot = P + I + D;
 
-        % Velocity State Updates
-        x_vel = bot.speed*cosd(theta_h + theta_hdot*t_step);
-        y_vel = bot.speed*sind(theta_h + theta_hdot*t_step);
-        vel = [x_vel;y_vel];
-        
+        % Theta State Update        
         bot.theta(:,i) = [theta_h; theta_hdot; theta_r; theta_e];
         
         % Relative Distance of Target from Bot
@@ -69,18 +70,22 @@ function [sim_results,bot,target] = simulate_delay(sim_vars,bot,target,delay)
         end
 
         % Next State Updates
-        if i < length(t)
+        x_vel = bot.speed*cosd(theta_h + theta_hdot*t_step);
+        y_vel = bot.speed*sind(theta_h + theta_hdot*t_step);
+        vel = [x_vel;y_vel]; % Velocity State Updates
+        if i < length(t) % Ensures bot and target pos lengths remain the same
             bot.pos(:,i+1) = bot.pos(:,i) + t_step*vel; % + 0.0001*randn(2,1);
         end
-        
     end
     
-    sim_results.time = t(i);
-    sim_results.dist = dist;
-    sim_results.iter_num = i;
-    sim_results.t_step = t_step;
+    sim_results.time = t(i); % Saves EndTime results
+    sim_results.dist = dist; % Saves Distance Results
+    sim_results.iter_num = i; % Saves Iteration Number
+    sim_results.t_step = t_step; % Saves Time Steps
     
-    target.pos = target.pos(:,1:size(bot.pos,2));
+    target.pos = target.pos(:,1:size(bot.pos,2)); % Truncates TargetPos lengths
+    
+    % Ensures optimal axis for data plot
     y_est_bounds = [min([bot.pos(2,:);target.pos(2,:)],[],'all') max([bot.pos(2,:);target.pos(2,:)],[],'all')];
     x_est_bounds = [min([bot.pos(1,:);target.pos(1,:)],[],'all') max([bot.pos(1,:);target.pos(1,:)],[],'all')];
     sim_results.y_bounds = [min([y_est_bounds;sim_vars.y_bounds],[],'all') max([y_est_bounds;sim_vars.y_bounds],[],'all')];
