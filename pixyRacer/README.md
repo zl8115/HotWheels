@@ -1,2 +1,0 @@
-# HotWheels
-HotWheels Pi Code
