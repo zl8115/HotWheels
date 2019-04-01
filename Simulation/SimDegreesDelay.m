@@ -1,4 +1,4 @@
-close all, clear all
+close all, clear all, clc
 
 % Simulation Variables
 t_end = 5; % 10 second simulation
@@ -8,9 +8,10 @@ y_bounds = [-0.4,0.4];
 t = [0:t_step:t_end];
 const_bearing = 0;
 %const_bearing = 20;
+delay = 2;
 
 % PID Tunings
-Kp = 1;
+Kp = 5;
 Ki = 0;
 Kd = 0; % 50 works well
 
@@ -35,7 +36,7 @@ target.y = filter(1,[1 -1], -(target.speed*t_step)*sin(2*pi*move_freq*t));
 bot.speed = 0.4; % 10cm/s or 0.1m/s
 bot.x(1) = 0;
 bot.y(1) = -0.15;
-bot.theta_h(1) = 45;
+bot.theta_h(1) = 90;
 bot.theta_hdot(1) = 0;
 bot.theta_h_est(1) = 0;
 
@@ -73,7 +74,12 @@ for i = 1:length(t)
     end
     
     % PID Controller State Update    
-    P(i) = Kp*(theta_e(i)-const_bearing); % Simple Pursuit if const_bearing = 0; else Constant Bearing    
+    if i-delay <= 0
+        P(i) = 0;
+    else
+        P(i) = Kp*(theta_e(i-delay)-const_bearing); % Simple Pursuit if const_bearing = 0; else Constant Bearing
+    end
+    
     I(i) = 0; % Not needed, not coded...  
     if i == 1
         D(i) = 0;

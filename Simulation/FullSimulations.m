@@ -180,7 +180,7 @@ ylabel('P-Gain (K_p)')
 %% Print Results
 
 [row,col] = find(varspeeds_time_results == min(varspeeds_time_results,[],'all'));
-fprintf('Opt BotSpeed vs TargetSpeed: BotSpeed=%1.2f; TargetSpeed=%1.2f \n', bot_speeds(row),target_speeds(col));
+fprintf('Opt TargetSpeed vs BotSpeed: TargetSpeed=%1.2f; BotSpeed=%1.2f \n', target_speeds(row),bot_speeds(col));
 
 [row,col] = find(Kp_bearing_results == min(Kp_bearing_results,[],'all'));
 fprintf('Opt Kp vs ConstBearing: Kp=%1.2f; ConstBearing=%1.2f \n', Kp_vals(row),const_bearing_vals(col));
